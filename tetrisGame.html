@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tetris Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <style>
+    
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        body {
+             background-color: #fff;
+        }
+
+        .gameLayOut {
+            width:421.6px;
+            height: 665px; 
+            background-color: #facd0d;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: inset 0 0 10px #fff;
+            border-radius: 20px;
+            padding: 45px;
+        }
+        .gameOption {
+            background-color: #99b086;
+            float: right;
+            width: 139.5px;
+            height: 100%;
+            padding-left: 20px;
+        }
+
+        #gameBoard {
+            padding: 2px;
+            display: block;
+            border: 4px solid #000;
+            background-color: #99b086;
+            float: left;
+        }
+
+        #nextShape { 
+            padding-top: 10px;
+            display: block;
+        } 
+
+        #score {
+            display: block;   
+        }
+
+        #level{
+            display: block;
+            padding-top: 10px;   
+        }
+
+        .gameController{
+            height:200px;
+            float: left;
+        }
+
+        .button_style{
+            font-size: 10px;
+            border-radius: 50%;
+            width: 65px;
+            height: 65px;
+            position: relative;
+            border: 1px solid #494949;
+            box-shadow: 0 3px 3px rgb(0 0 0 / 20%);
+        }
+
+        .button_style.active::after{
+            box-shadow: 0 5px 5px rgba(0, 0, 0, .6) inset;
+        }
+
+        .button_style.active::before{
+            box-shadow: 0 -3px 6px rgba(255, 255, 255, .6) inset;
+        }
+
+
+        .button_style.active {
+            transform: translateY(0.5px);
+        }
+      
+        .button_style::after,.button_style::before{
+            content: "";
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+            box-shadow: inset 0 5px 10px hsl(0deg 0% 100% / 80%);
+        }
+
+        .button_style::after{
+            content: "";
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+            box-shadow: inset 0 -5px 10px rgb(0 0 0 / 80%) !important;
+
+        }   
+
+        .green_button{
+            background: #2dc421;
+           
+        }
+        
+        .purple_button{
+            background: #5a65f1;
+        
+        }
+
+        .red_button{
+            background: #dd1a1a;
+        }
+
+        #rotation_btn{
+            left:  133px;
+            top: 18px;
+        }
+
+        #left_btn{
+            top: 71px;
+            left: 8px;
+        }
+
+        #right_btn{
+            top: 70px;
+            left: 52px;
+        }
+
+        #bottom_btn{
+            top: 121px;
+            left: -73px;
+        }
+
+        #drop_btn{
+            left: 23px;
+            top: 22px;
+            width: 92px !important;
+            height: 92px !important;
+        }
+
+        .btn_style_1{
+            top: 18px;
+        }
+
+
+    </style>
+</head>
+<body>
+<div class="gameLayOut">
+    <div style="border: 5px solid;
+    border-color: #987f0f #fae36c #fae36c #987f0f;height: 510px;width: 421.5px;">
+<canvas id="gameBoard" width="250" height="500px">
+
+</canvas>
+<div class="gameOption">
+
+    <canvas id="score" width="120px" height="105px">
+
+    </canvas>
+    <canvas id="level" width="120px" height="105px">
+
+    </canvas>
+    <canvas id="nextShape" width="120px" height="175px">
+
+    </canvas>
+
+</div>    
+</div>
+
+<div class="gameController">
+    <div style="float: left">
+        <div>
+            <button id="pause_btn"  class="green_button button_style btn_style_1">Pause(P)</button>
+            <button id="reset_btn"  class="red_button button_style btn_style_1" style="left: 10px;">Reset(R)</button>
+        </div>
+        <div>
+            <button id="drop_btn" class="purple_button button_style" style="width: 70px;height: 70px;">Drop(SPACE)</button>
+        </div>
+    </div>
+    <div style="float:right">
+        <button id="rotation_btn" class="purple_button button_style" >Rotation</button>
+        <button id="left_btn" class="purple_button button_style" >Left</button>
+        <button id="right_btn" class="purple_button button_style" >Right</button>
+        <button id="bottom_btn" class="purple_button button_style" >Bottom</button>
+    </div>
+</div>
+</div>
+
+<script>
+    
+    const gameBoardCanvas = document.getElementById("gameBoard");
+    const ctx = gameBoardCanvas.getContext("2d");
+    const nextShapeCanvas = document.getElementById("nextShape");
+    const ctxNextShape = nextShapeCanvas.getContext("2d");
+    const scoreCanvas = document.getElementById("score");
+    const ctxScore = scoreCanvas.getContext("2d");
+    const levelCanvas = document.getElementById("level");
+    const ctxLevel = levelCanvas.getContext("2d");
+    const dropBtn = document.getElementById("drop_btn");
+    const leftBtn = document.getElementById("left_btn");
+    const rightBtn = document.getElementById("right_btn");
+    const bottomBtn = document.getElementById("bottom_btn");
+    const rotateBtn = document.getElementById("rotation_btn");
+    const pauseBtn = document.getElementById("pause_btn");
+    const resetBtn = document.getElementById("reset_btn");
+    const size = 25;
+    const cols = gameBoardCanvas.width/size;
+    const rows = gameBoardCanvas.height/size;
+    const squareBoardColor = "#859670";
+    const strokeSquareBoardColor = "#95a681"; 
+    const squareShapeColor = "#000";
+    const strokeSquareShapeColor = "#000";
+    const urlAudio = './music/sound.mp3'
+    const audio = new Audio('./music/sound.mp3');
+    class Shape {
+        constructor(template) {
+            this.template = template;
+            this.activeIndex = 0; // index hình thái ban đầu của khối hình mặc định bằng 0
+            this.activeTemplate = this.template[this.activeIndex];
+
+            // vị trí của khối khi được khởi tạo 
+            this.x = cols / 2 - 1;
+            this.y = -2;
+        }
+ 
+        getX(){
+            return Math.trunc(this.x);
+        }
+
+        getY(){
+            return Math.trunc(this.y);
+        }
+
+        // duyệt mảng activeTemplate theo hàng cột === 0 thì bỏ qua 
+        checkBottom() {
+            for (let i = 0; i < this.activeTemplate.length; i++) {
+                for (let j = 0; j < this.activeTemplate.length; j++) {
+                    if (this.activeTemplate[i][j] === 0) continue;
+                        // vị trí x của phần tử trên gameBoard hàng + vị trí y của shape
+                        let realY = i + this.getY();
+                         // vị trí y của phần tử trên gameBoard cột + vị trí x của shape
+                        let realX = j + this.getX();
+                       
+                        // check vị trí hàng típ theo của phần tử  >= tổng hàng 
+                        if(realY + 1 >= rows){
+                            return false;
+                        }
+
+                        // check vị trí của phần tử này trên mảng shapeArr với (hàng + thêm 1) (mảng này cao hơn gameBoard 3 hàng)
+                        if(shapeArr[realY + 4][realX] !== 0){
+                            return false;
+                        }
+
+                    }
+            }
+            return true;
+        }
+
+        checkLeft() {
+            for (let i = 0; i < this.activeTemplate.length; i++) {
+                for (let j = 0; j < this.activeTemplate.length; j++) {
+                    if (this.activeTemplate[i][j] === 0) continue;
+
+                        // tương tự như trên
+                        let realY = i + this.getY();
+                        let realX = j + this.getX();
+
+                        // check bên trái thì check trước vị trí phần tử (cột - 1) 
+                        if (realX - 1 < 0 ) {
+                            return false;
+                        }           
+                        // tương tự  giảm cột xuống 1
+                        if(shapeArr[realY + 3][realX - 1] !== 0){
+                            return false;
+                        }
+                    }
+            }
+            return true; 
+        }
+
+        checkRight() {
+            for (let i = 0; i < this.activeTemplate.length; i++) {
+                for (let j = 0; j < this.activeTemplate.length; j++) {
+                    if (this.activeTemplate[i][j] === 0) continue;
+
+                        // tương tự như trên
+                        let realY = i + this.getY();
+                        let realX = j + this.getX();
+
+                         // check bên phải thì check trước vị trí phần tử (cột + 1) 
+                        if (realX + 1 >= cols ) {
+                            return false;
+                        }            
+
+                         // tương tự  tăng cột lên 1
+                        if(shapeArr[realY + 3][realX + 1] !== 0){
+                            return false;
+                        }
+                    }
+                }
+            return true; 
+        }
+
+
+        // ý tưởng khi xoay khối hình là tạo bằng tay các hình thái khác nhau của khối hình đó mặc định ban đầu là 0
+        // cứ mỗi lần xoay là xoay từ 0 đến 1,2.. đến hết rồi lại quay lại 0
+        // check là lấy hình thái típ theo mà nó rotaion 
+        checkRotation(){
+            //  lấy cái index hiện tại + 1 mod cho length lấy phần dư lun đc kết quả từ 0,1,2... đến length rồi lại quay về 0
+            let tempIndex = ( this.activeIndex + 1 ) % this.template.length;
+            for (let i = 0; i < this.template[tempIndex].length; i++) {
+                for (let j = 0; j < this.template[tempIndex].length; j++) {
+                    if (this.template[tempIndex][i][j] === 0) continue;
+                    let realX = j + this.getX();
+                    let realY = i + this.getY();
+
+                    //check xem có bị xem có ra khỏi game board hay chưa có trùng với shape lock chưa(shapeArr)
+                    if(
+                        realX  < 0 ||
+                        realX  >= cols ||
+                        realY < 0 ||
+                        realY  >= rows ||
+                        // mình sử dụng shapeArr từ index bằng 3 nên + 3
+                        shapeArr[realY + 3][realX] === 1 
+                    ) {
+                        return false;
+                    }
+
+            }   
+            }
+            return true;
+        }
+
+        changeRotation() {
+           if(this.checkRotation()){
+               this.activeIndex = ( this.activeIndex + 1 ) % this.template.length; // (0 + 1) % 4 => 1
+               this.activeTemplate = this.template[this.activeIndex];
+           }
+        }
+
+
+        moveRight() {
+            if (this.checkRight()) {
+                this.x += 1;
+            }
+        }
+
+        moveLeft() {
+            if (this.checkLeft()) {
+                this.x -= 1;
+            }
+        }
+
+        moveBottom() {
+            if (this.checkBottom()) {
+                this.y += 1;
+                score += 1;
+            }
+        }
+
+        dropDown(){
+            while(this.checkBottom()){
+                this.y += 1;
+            }
+        }
+    }
+
+    const shapes = [
+    [
+        [
+            [1, 0, 0],
+            [1, 1, 1],
+            [0, 0, 0]
+        ],
+        [
+            [0, 1, 1],
+            [0, 1, 0],
+            [0, 1, 0]
+        ],
+        [
+            [0, 0, 0],
+            [1, 1, 1],
+            [0, 0, 1]
+        ],
+        [
+            [0, 1, 0],
+            [0, 1, 0],
+            [1, 1, 0]
+        ],
+  ],
+  [
+      [
+          [0, 0, 1],
+          [1, 1, 1],
+          [0, 0, 0]
+      ],
+      [
+          [1, 1, 0],
+          [0, 1, 0],
+          [0, 1, 0]
+      ],
+      [
+          [0, 0, 0],
+          [1, 1, 1],
+          [1, 0, 0]
+      ],
+      [
+          [0, 1, 0],
+          [0, 1, 0],
+          [0, 1, 1]
+      ],
+  ],
+  [
+      [
+          [0, 1, 1],
+          [1, 1, 0],
+          [0, 0, 0]
+      ],
+      [
+          [0, 1, 0],
+          [1, 1, 0],
+          [1, 0, 0]
+      ],
+      [
+          [0, 0, 0],
+          [1, 1, 0],
+          [0, 1, 1]
+      ],
+      [
+          [0, 0, 1],
+          [0, 1, 1],
+          [0, 1, 0]
+      ],
+  ],
+  [
+      [
+          [0, 1, 0],
+          [1, 1, 1],
+          [0, 0, 0]
+      ],
+      [
+          [0, 1, 0],
+          [1, 1, 0],
+          [0, 1, 0]
+      ],
+      [
+          [0, 0, 0],
+          [1, 1, 1],
+          [0, 1, 0]
+      ],
+      [
+          [0, 1, 0],
+          [0, 1, 1],
+          [0, 1, 0]
+      ],
+  ],
+  [
+      [
+          [0, 0, 0, 0],
+          [1, 1, 1, 1],
+          [0, 0, 0, 0],
+          [0, 0, 0, 0],
+      ],
+      [
+          [0, 1, 0, 0],
+          [0, 1, 0, 0],
+          [0, 1, 0, 0],
+          [0, 1, 0, 0],
+      ],
+  ],
+  [
+      [
+          [1, 1],
+          [1, 1],
+      ],
+  ],
+  [
+      [
+          [1, 1, 0],
+          [0, 1, 1],
+          [0, 0, 0]
+      ],
+      [
+          [1, 0, 0],
+          [1, 1, 0],
+          [0, 1, 0]
+      ],
+      [
+          [0, 0, 0],
+          [1, 1, 0],
+          [0, 1, 1]
+      ],
+      [
+          [0, 0, 1],
+          [0, 1, 1],
+          [0, 1, 0]
+      ],
+  ],
+];
+
+    function getRandomShape(){
+            let index = Math.floor(Math.random() * shapes.length) // lấy ngẫu nhiên từ shape 0 -> 6
+            return new Shape(shapes[index]);
+    }
+
+    let gameReset;
+    let gamePause;
+    let gameStart;
+    let gameOver;
+    let currentShape;
+    let nextShape;
+    let score;
+    let gameSpeed = 2;
+    let shapeArr;
+    let fps = 60;
+    let level = 1;
+    let line = 0;
+    let rdShape;
+
+    function draw() {
+        ctx.clearRect(0, 0, gameBoardCanvas.width, gameBoardCanvas.height);
+        drawGameBoard();
+        drawNextShape();
+        drawCurrentShape();
+        drawShapes();
+        drawScore();
+        drawLevel();
+    
+        if (gameOver) {
+            drawGameOver();
+            return;
+        }
+        if (!gameStart) {
+            drawGamePrepare();
+            return;
+        }
+        if (gamePause) {
+            drawGamePause();
+        }
+        if (level > 3){
+            drawRdShapeFallDown();
+        }
+    }
+
+    function prepare(){
+
+        if(level === 1){
+            shapeArr = [
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 1, 0, 0, 1, 0, 1, 0, 0],
+  [0, 0, 1, 0, 0, 1, 0, 1, 0, 0],
+  [0, 0, 1, 1, 1, 1, 0, 1, 0, 0],
+  [0, 0, 1, 0, 0, 1, 0, 1, 0, 0],
+  [0, 0, 1, 0, 0, 1, 0, 1, 0, 0]
+];
+    if (gameReset) {
+            clearInterval(run);
+            if(level > 3){
+                clearInterval(rdSFall); 
+            }
+        }
+            score = 0;
+            gameStart = false;
+            gameOver = false;
+            currentShape = getRandomShape();
+            nextShape = getRandomShape();
+            console.log("start",shapeArr);
+            clickEvent();
+            return;
+        }
+
+        if (gameReset) {
+            clearInterval(run);
+            if(level > 3){
+                clearInterval(rdSFall); 
+            }
+        }
+        shapeArr = [];
+        let count = line;
+        let rdTime ;
+
+        // tạo mảng 2 chiều
+        // ý tưởng là mỗi là chạy theo hàng tạo ra mảng => 20 hàng sẽ có 20 array đc tạo ra rồi push vào mảng lớn
+        // và cứ mỗi 10 cột của hàng push số 1 hoặc 0 vào ...từ đó ta đc mảng 20 hàng 10 cột
+        for (let i = 0; i < rows + 3 ; i++) {
+        let temp = [];
+
+        // count là  số hàng xuất hiện khi bắt đầu game
+         if(count > 0){
+          let rdIndexArr = [];
+            rdTime = Math.floor(Math.random() * 4 + 1); // random  số cột đc gắn bằng 0(ko vẽ đen) từ 1 đến 4
+            console.log(rdTime);
+            for(let k = 0 ; k < rdTime; k ++){
+                // random vị trí cột sẽ đc gắn bằng 0 do tổng số cột từ 10 => index chạy từ 0 đến 9 => random * 10
+                 rdIndex = Math.floor(Math.random() * 10 );
+                 rdIndexArr.push(rdIndex);        
+            }
+            console.log("rdIndexArr",rdIndexArr);
+            // for từng cột check xem có trong mảng rdIndex khi nảy k nếu có gắn num = 0
+            for (let j = 0; j < cols; j++) {
+                for(let l = 0 ; l < rdIndexArr.length; l ++ ){
+                    if(j === rdIndexArr[l]){
+                        num = 0;
+                        break;
+                    } else {
+                         num = 1;
+                    }
+                }
+                temp.push(num);             
+            }
+            count --;
+        } else {
+            for (let j = 10 - 1; j >= 0; j--) {
+                        temp.push(0);
+            }
+        }
+            shapeArr.push(temp);
+        }
+        shapeArr.reverse();
+        score = 0;
+        gameStart = false;
+        gameOver = false;
+        gamePause = false;
+        currentShape = getRandomShape();
+        nextShape = getRandomShape();
+        console.log("start",shapeArr);
+        clickEvent();
+    }
+
+    function update(){
+        if (gameOver) {
+            clearInterval(run);
+            if(level > 3){
+                clearInterval(rdSFall);
+            }      
+            return;
+        }
+        if (!gameStart) {
+            clearInterval(run);
+            if(level > 3){
+                clearInterval(rdSFall);
+            }       
+            return;
+        }
+        if(level === 4){
+            if (currentShape.checkBottom() && !checkCollide()) {
+            currentShape.y += 1;
+            } else {         
+            if(checkCollide()){
+            currentShape = nextShape;
+            nextShape = getRandomShape();
+            getRdShapeFall();
+            } else {
+                for (let i = 0; i < currentShape.activeTemplate.length; i++) {
+                for (let j = 0; j < currentShape.activeTemplate.length; j++) {
+                    if (currentShape.activeTemplate[i][j] === 1) {
+                        let realY = i + currentShape.getY() ;
+                        let realX = j + currentShape.getX() ; 
+                        // vị trí trên shapeArr bắt đầu từ index 3
+                        shapeArr[realY + 3][realX] = 1;
+                    }
+                }
+            }
+            deleteCompleteRows();
+            score +=  20;
+            currentShape = nextShape;
+            nextShape = getRandomShape();
+            }
+            
+           // nếu checkOverGame = true thì set gameOver = true để tí nữa check và vẻ màn hình game over
+             if (checkOverGame()) {
+                 gameOver = true;
+                 gameStart = false;
+                 gameOverAudio();
+                 clickEvent();
+                }
+                }
+            } else {
+                    if (currentShape.checkBottom()) {
+                    currentShape.y += 1;
+                } else {
+                    
+                        for (let i = 0; i < currentShape.activeTemplate.length; i++) {
+                        for (let j = 0; j < currentShape.activeTemplate.length; j++) {
+                            if (currentShape.activeTemplate[i][j] === 1) {
+                                let realY = i + currentShape.getY() ;
+                                let realX = j + currentShape.getX() ; 
+                                shapeArr[realY + 3][realX] = 1;
+                        }
+                    }
+                }
+                    
+                    score +=  20;
+                    currentShape = nextShape;
+                    nextShape = getRandomShape();
+                    deleteCompleteRows();
+                // nếu checkOverGame = true thì set gameOver = true để tí nữa check và vẻ màn hình game over
+                    if (checkOverGame()) {
+                        gameOver = true;
+                        gameStart = false;
+                        gameOverAudio();
+                        clickEvent();
+                    }
+            }
+
+        }
+    }
+
+
+    // duyệt hết phần tử mảng 1d check xem có chứa value hay k có return true, ko return false
+    function checkArr1DContain(arr = [],value){
+        for(let i = 0 ; i < arr.length; i ++){
+            if(arr[i] === value){
+                return true;
+            }        
+        }
+        return false;
+    }
+
+
+    // duyệt hết hàng đầu tiên của mảng xem có chứa khối vuông nào k? nếu có =>check = true nếu ko => tiếp tục vòng lặp và check vẫn bằng false
+    function checkOverGame(){ 
+             for(let col = 0 ; col < cols; col ++){
+                if(shapeArr[3][col] === 1){
+                    return true;
+                }        
+             }
+            return false;
+    }
+
+    function runGame(){
+            gameStart = true;
+            clickEvent();
+            run = setInterval(update,1000/gameSpeed);        
+            if(level > 3){
+                rdSFall = setInterval(rdShapeFallDown,1000/gameSpeed);
+            }
+            gamePause = false;
+    }
+
+    function startGame(){
+        if (gameReset) {
+            clearInterval(run);
+            if(level > 3){
+                clearInterval(rdSFall); 
+            }
+        }
+
+        if (gameOver) {
+            clearInterval(run);
+        }
+
+        if(level === 1){
+            shapeArr = [
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 1, 0, 0, 1, 0, 1, 0, 0],
+  [0, 0, 1, 0, 0, 1, 0, 1, 0, 0],
+  [0, 0, 1, 1, 1, 1, 0, 1, 0, 0],
+  [0, 0, 1, 0, 0, 1, 0, 1, 0, 0],
+  [0, 0, 1, 0, 0, 1, 0, 1, 0, 0]
+];
+            score = 0;
+            gameStart = false;
+            gameOver = false;
+            clickEvent();
+            return;
+        }
+
+        if(level === 2){
+            gameSpeed = 3;
+            line = 2;
+        }
+
+        if(level === 3){
+            gameSpeed = 4;
+            line = 3;
+        }
+
+        if( level === 4){
+            getRdShapeFall();   
+            gameSpeed = 5;
+            line = 3;
+        }
+        score = 0;
+        gameStart = false;
+        gameOver = false;
+        clickEvent();
+        
+        shapeArr = [];
+        let count = line;
+        let rdTime ;
+        for (let i = 0; i < rows + 3; i++) {
+        let temp = [];
+         if(count > 0){
+          let rdIndexArr = [];
+            rdTime = Math.floor(Math.random() * 4 + 1);
+            for(let k = 0 ; k < rdTime; k ++){
+                 rdIndex = Math.floor(Math.random() * 10 );
+                 rdIndexArr.push(rdIndex);        
+            }
+            for (let j = 0; j < cols; j++) {
+                for(let l = 0 ; l < rdIndexArr.length; l ++ ){
+                    if(j === rdIndexArr[l]){
+                        num = 0;
+                        break;
+                    } else {
+                         num = 1;
+                    }
+                }
+                temp.push(num);
+            }
+            count --;
+        } else {
+            for (let j = 10 - 1; j >= 0; j--) {
+                        temp.push(0);
+            }
+        }
+            shapeArr.push(temp);
+        }
+        shapeArr.reverse();
+    }
+
+    function resetGame(){
+        
+        if (gameReset) {
+            clearInterval(run);
+            if(level > 3){
+                clearInterval(rdSFall); 
+            }
+        }
+        if (gameOver) {
+            clearInterval(run);
+        }
+        if(level === 1){
+            shapeArr = [
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 1, 0, 0, 1, 0, 1, 0, 0],
+  [0, 0, 1, 0, 0, 1, 0, 1, 0, 0],
+  [0, 0, 1, 1, 1, 1, 0, 1, 0, 0],
+  [0, 0, 1, 0, 0, 1, 0, 1, 0, 0],
+  [0, 0, 1, 0, 0, 1, 0, 1, 0, 0]
+];
+
+            score = 0;
+            gameStart = false;
+            gameOver = false;
+            currentShape = getRandomShape();
+            nextShape = getRandomShape();
+            console.log("start",shapeArr);
+            clickEvent();
+            return;
+        }
+
+        if(level === 2){
+            gameSpeed = 3;
+            line = 2;
+        }
+
+        if(level === 3){
+            gameSpeed = 4;
+            line = 3;
+        }
+        console.log("level",level);
+        if( level === 4){
+            getRdShapeFall();   
+            gameSpeed = 5;
+            line = 4;
+        }
+
+        shapeArr = [];
+        let count = line;
+        let rdTime ;
+        for (let i = 0; i < rows + 3; i++) {
+        let temp = [];
+         if(count > 0){
+          let rdIndexArr = [];
+            rdTime = Math.floor(Math.random() * 4 + 1);
+            for(let k = 0 ; k < rdTime; k ++){
+                 rdIndex = Math.floor(Math.random() * 10 );
+                 rdIndexArr.push(rdIndex);        
+            }
+            for (let j = 0; j < cols; j++) {
+                for(let l = 0 ; l < rdIndexArr.length; l ++ ){
+                    if(j === rdIndexArr[l]){
+                        num = 0;
+                        break;
+                    } else {
+                         num = 1;
+                    }
+                }
+                temp.push(num);
+            }
+            count --;
+        } else {
+            for (let j = 10 - 1; j >= 0; j--) {
+                        temp.push(0);
+            }
+        }
+            shapeArr.push(temp);
+        }
+        shapeArr.reverse();
+        score = 0;
+        gameStart = false;
+        gameOver = false;
+        clickEvent();
+    }
+
+    function pauseGame(){
+            gamePause = true;
+            clearInterval(run);
+            if(level > 3){
+            clearInterval(rdShapeFallDown());   
+            }
+        clickEvent();  
+    }
+
+    // level 1
+    // có 1 chữ hi xuất hiện
+
+
+    // level 2
+    // khối hình rơi xuống nhanh hơn và khởi đầu game sẽ có 2 hàng trồi lên
+    // mỗi lần ăn điểm có 2 hàng trồi lên
+ 
+
+    // sau khi nâng lên ví dụ line = 2 sẽ 2 hàng dưới trống = 0 hết
+    // mình cũng sẽ rd làm sao cho 1 hàng chỉ chứa ít nhất là 1 cột = 0 thôi
+    // mình sẽ random số cột = 0 trước sau đó random vị trí cột đc gắn bằng 0 còn các cột còn lại mình gắn bằng 1
+    function raiseShapeArr(){
+        let rdTime ;
+        for(let i = rows + 2 ; i > rows - line; i --){
+            rdTime = Math.floor(Math.random() * 4 + 1);
+            let rdIndexArr = [];
+            for(let k = 0 ; k < rdTime; k ++){
+                 rdIndex = Math.floor(Math.random() * 10 );
+                 rdIndexArr.push(rdIndex);        
+            }
+            for(let j = 0 ; j < 10 ; j ++){
+                if(checkArr1DContain(rdIndexArr,j)){
+                    shapeArr[i][j] = 0;
+                } else{
+                    shapeArr[i][j] = 1;
+                }
+            }
+        }
+    }
+
+     // level 3
+     //  khối hình rơi xuống nhanh hơn và khởi đầu game sẽ có 3 hàng trồi lên
+     //  mỗi lần ăn điểm có 3 hàng trồi lên và ngẫu nhiên lại shapeArr 
+
+
+
+      // duyệt hết phần từ của mảng 2d theo từng row giảm dần nếu row chứa số 1 thì gán check = true ko thì típ tục duyệt
+    // và gàn tạm thời row = i đang duyệt và típ tục duyệt đến hết mảng .
+    function getlastRowContain1(){
+            let row;
+            for (let i = rows + 2; i >= 3; i--) {
+                          for (let  j = 0; j < 10 ; j++) {
+                                if(shapeArr[i][j] === 1){
+                                    row  = i;
+                                } 
+                         }
+                    }
+                return row;
+        }
+
+        // random lại gắn lại 1 hoặc 0 cho các phẩn tử trong shapeArr dựa vào số dòng có xuất hiện con số 1
+        function rdShapeArrPos(){
+                    let rdNum;
+                    for (let i = rows + 2 ; i >= getlastRowContain1(); i--) {
+                          for (let  j = 0; j < 10 ; j++) {
+                              rdNum = Math.floor(Math.random() * 2 );
+                              shapeArr[i][j] = rdNum;
+                         }
+                    }
+            }
+     
+     // level 4
+     // khối hình chỉ rơi xuống nhanh hơn và khởi đầu game sẽ có 3 hàng trồi lên
+     // mỗi lần ăn điểm có 3 hàng trồi lên và 1 khối hình random trồi lên
+     // cứ mỗi lần khối hình bạn điều khiển chạm đáy thì 1 khối hình random rơi xuống
+     // khối hình bạn đang điều khiển chạm vào khối hình đang rơi cả 2 sẽ biết mất
+     
+
+    function getRdShapeFall(){
+        rdShape = getRandomShape();
+        if(rdShape.activeTemplate.length === 4){
+                rdShape.x  = 0;
+            } else {
+                    // do vị trí khởi tạo bị trùng với lại currentShape nên ta gắn lại vị trí cho rdShapeFall
+                    // random ra số 1 hoặc 0 
+                    let rd = Math.floor(Math.random() * 2);
+
+                    if(rd === 1){
+                        rdShape.x = 0;
+                    } else {
+                        rdShape.x = 7;
+                    }
+            }
+    }
+
+    // tượng tự như current shape nó sẽ từ tù đi xuống nhưng bạn k điều khiển đc cái khối này
+    function rdShapeFallDown(){
+        if(rdShape.checkBottom()) { rdShape.y ++;}
+        else {
+        for (let i = 0; i < rdShape.activeTemplate.length; i++) {
+                for (let j = 0; j < rdShape.activeTemplate.length; j++) {
+                    if (rdShape.activeTemplate[i][j] === 0) continue;
+                        let realY = i + rdShape.getY();
+                        let realX = j + rdShape.getX();    
+                        shapeArr[realY + 3][realX] = 1;
+                }
+            }
+            if (checkOverGame()) {
+                        gameOver = true;
+                        gameStart = false;
+                        gameOverAudio();
+                        clickEvent();
+                    }              
+            if (gameOver) {
+            clearInterval(run);
+            if(level > 3){
+                clearInterval(rdSFall);
+            }      
+            return;
+        }
+            deleteCompleteRows();
+            getRdShapeFall();
+        }
+    }
+
+
+    // duyệt hết các phẩn tử của khối hình của bạn và khối hình ngẩu nhiên
+    // check xem vị trí X và Y của từng phần tử của cả 2 trên game board trùng nhau ko (bằng nhau)
+    // trùng return true,
+    function checkCollide(){
+        for (var i = 0; i < currentShape.activeTemplate.length; i ++) {
+        for (var j = 0; j < currentShape.activeTemplate.length; j ++) {
+            //phần tử phải === 1 mới check  ko thì bỏ qua chạy típ vòng lặp
+            if (currentShape.activeTemplate[i][j] === 0) continue;
+            let realY = i + currentShape.getY();
+            let realX = j + currentShape.getX();   
+        for (var r = 0; r < rdShape.activeTemplate.length; r ++) {
+        for (var c = 0; c < rdShape.activeTemplate.length; c ++) {
+            let realYrd = r + rdShape.getY();
+            let realXrd = c + rdShape.getX(); 
+            //phần tử phải !== 0(tức là phải === 1) mới check
+            if (rdShape.activeTemplate[r][c] !== 0 && realYrd === realY && realXrd === realX ) {
+                        return true;
+                  } 
+               }
+            }
+        }
+    }
+    return false;
+}
+
+
+     function deleteCompleteRows(){
+          for (let i = 3; i < rows + 3; i++) {
+             let isComplete = true;
+            for (let j = 0; j < cols ; j++) {
+                if(shapeArr[i][j] === 0){
+                    isComplete = false;
+                    break;
+                }
+            }  
+            if(isComplete){
+                console.log("i", i);
+                score += 100;
+
+                // duyệt ngược lại rồi gắn row trước thành row sau
+                for (let k = i; k > 0; k --) {
+                    for( let c = 0 ; c < cols; c ++){
+                        shapeArr[k][c] = shapeArr[k - 1][c];
+                    }
+                }
+                    if(level > 1){
+                        //nâng lên gắn hàng sau = hàng trước line hàng
+                        for(let r = 3 ; r < rows + 3 ; r ++){
+                        for(let c = 0 ; c < cols ; c ++){
+                            shapeArr[r-line][c] = shapeArr[r][c];
+                        }
+                        }   
+                        raiseShapeArr();
+                        if(level > 2){
+                            rdShapeArrPos();
+                        }
+                    }   
+                    completeRowsAudio();
+                }        
+            }     
+     }
+
+    function drawShapes() {
+        for(let i = 3; i < rows + 3; i ++){
+                for(let j = 0; j < cols; j ++){
+                    if(shapeArr[i][j] === 1) {
+                        // vị trí của shapeArr từ 3 còn vị trí trên game board là 0 nên - 3
+                        drawSquareShape(size * j , size * (i - 3),size);
+                    }
+                }  
+         } 
+    }
+
+
+    function drawRdShapeFallDown() {
+        for(let i = 0; i < rdShape.activeTemplate.length ; i ++){
+                for(let j = 0; j < rdShape.activeTemplate.length ; j ++){
+                    if(rdShape.activeTemplate[i][j] === 1) {   
+                        drawSquareShape(rdShape.getX() * size + size * j,rdShape.getY() * size + size * i,size);
+                    }
+                }  
+           }
+    }
+
+
+        function drawCurrentShape(){
+            for(let i = 0; i < currentShape.activeTemplate.length ; i ++){
+                for(let j = 0; j < currentShape.activeTemplate.length ; j ++){
+                    if(currentShape.activeTemplate[i][j] === 1) {   
+                        drawSquareShape(currentShape.getX() * size + size * j,currentShape.getY() * size + size * i,size);
+                    }
+                }  
+            }    
+        }
+
+    function drawNextShape() {
+        ctxNextShape.clearRect(0, 0, nextShapeCanvas.width, nextShapeCanvas.height);
+        ctxNextShape.font = "32px 'VT323', monospace";
+        ctxNextShape.fillStyle = "#000";
+        ctxNextShape.fillText("Next", 10, 20);
+        // duyệt hết các phần tử mảng active template của next shape mặc định lúc khởi tạo là index = 0
+            for(let i = 0; i < nextShape.activeTemplate.length; i ++){
+                for(let j = 0; j < nextShape.activeTemplate.length ; j ++){
+                    if(nextShape.activeTemplate[i][j] === 1) { 
+                        // vị trí vẻ trên canvas phải * với size => vị trí nó sẽ theo i và j
+                        let x =  15 + size * j ; // + 15 (cho vị trí nó đẹp)
+                        let y =  size * i + 40; // + 40 (cho vị trí nó đẹp)
+                        ctxNextShape.fillStyle = squareShapeColor;
+                        ctxNextShape.fillRect(x+3,y+3,size-6,size-6);
+                        ctxNextShape.lineWidth = 2;
+                        ctxNextShape.strokeStyle = strokeSquareShapeColor;
+                        ctxNextShape.strokeRect(x,y,size,size);
+                }  
+             }
+            }
+    }
+
+
+    function drawGameBoard() {
+        // chạy hết từ dài đến cao rồi vẽ các khối nhỏ khích thước bằng biến size
+        for(let x = 0; x <= gameBoardCanvas.width; x += size){
+            for(let y = 0; y <= gameBoardCanvas.height ; y += size){
+                drawSquareBoard(x,y,size);
+            }
+        }
+    }
+
+    function drawScore(){
+        ctxScore.clearRect(0, 0, scoreCanvas.width, scoreCanvas.height);
+        ctxScore.font = "32px 'VT323', monospace";
+        ctxScore.fillStyle = "#000";
+        ctxScore.lineWidth = 2;
+        ctxScore.fillText("Score", 10, 30);
+        ctxScore.font = " 40px 'VT323', monospace";
+        ctxScore.fillText(score, 20, 80);
+    }
+
+    function drawGameOver(){
+        ctx.font = "35px 'VT323', monospace";
+        ctx.fillStyle = "#fff";
+        ctx.fillText("Game Over!", 50, gameBoardCanvas.height / 2);
+    }
+
+     function drawGamePrepare(){
+        ctx.font = "35px 'VT323', monospace";
+        ctx.fillStyle = "#fff";
+        ctx.fillText("Tetris game!", 45, gameBoardCanvas.height / 2);
+    }
+
+    function drawGamePause(){
+        ctx.font = "35px 'VT323', monospace";
+        ctx.fillStyle = "#fff";
+        ctx.fillText("Game is pause!", 40, gameBoardCanvas.height / 2);
+    }
+
+
+    function drawLevel() {
+        ctxLevel.clearRect(0, 0, scoreCanvas.width, scoreCanvas.height);
+        ctxLevel.font = "32px 'VT323', monospace";
+        ctxLevel.fillStyle = "#000";
+        ctxLevel.fillText("Level",10,30);
+        ctxLevel.font = "40px 'VT323', monospace";
+        ctxLevel.fillText(level,20,80);
+    }
+   
+
+    function drawSquareShapeCollide(x,y,width) {
+        ctx.fillStyle = "#dd1a1a";
+        // mục đích để vẻ border nên giảm size lại
+        ctx.fillRect(x+3,y+3,width-6,width-6);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#dd1a1a";
+        ctx.strokeRect(x,y,width,width);
+    }
+
+    function drawSquareShape(x,y,width) {
+        ctx.fillStyle = strokeSquareShapeColor;
+        ctx.fillRect(x+3,y+3,width-6,width-6);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = strokeSquareShapeColor;
+        ctx.strokeRect(x,y,width,width);
+    }
+
+    function drawSquareBoard(x,y,width) {
+        ctx.fillStyle = squareBoardColor;
+        ctx.fillRect(x+3,y+3,width-6,width-6);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = strokeSquareBoardColor;
+        ctx.strokeRect(x,y,width,width);
+    }
+
+    function levelUp(){
+        level++;
+    }
+
+    function levelDown(){
+        level--;
+    }
+
+
+    window.addEventListener(
+  "keydown",
+  (event) => {
+    // phím s và phím mũi tên xuống 
+    // di chuyển xuống dưới
+    switch (event.code) {
+      case "KeyS":
+      case "ArrowDown":
+        bottomBtn.classList.add("active");
+        bottomBtn.onclick();
+        setTimeout(() => {
+            bottomBtn.classList.remove("active");
+        }, 100);
+        event.preventDefault();
+        break;
+    // phím a và phím mũi tên trái
+    // di chuyển qua trái
+      case "KeyA":
+      case "ArrowLeft":
+        leftBtn.classList.add("active");
+        leftBtn.onclick();
+        setTimeout(() => {
+          leftBtn.classList.remove("active");
+        }, 100);
+        event.preventDefault();
+        break;
+    // phím d và phím mũi tên phải 
+    // di chuyển qua phải
+      case "KeyD":
+      case "ArrowRight":
+        rightBtn.classList.add("active");
+        rightBtn.onclick();
+        setTimeout(() => {
+          rightBtn.classList.remove("active");
+        }, 100);
+        event.preventDefault();
+        break;
+    // phím w và phím mũi tên lên 
+    // quay khối hình
+      case "KeyW":
+      case "ArrowUp":
+        rotateBtn.classList.add("active");
+        rotateBtn.onclick();
+        setTimeout(() => {
+            rotateBtn.classList.remove("active");
+        }, 100);
+        break;
+    // phím space
+    // rơi xuống    
+      case "Space" :
+        dropBtn.classList.add("active");
+        dropBtn.onclick();
+        setTimeout(() => {
+            dropBtn.classList.remove("active");
+        }, 100);
+        event.preventDefault();
+        break;
+    // phím p
+    // pause game
+      case "KeyP" :
+        pauseBtn.classList.add("active");
+        pauseBtn.onclick();
+        setTimeout(() => {
+            pauseBtn.classList.remove("active");
+        }, 100);
+        event.preventDefault();
+        break;
+    // phím r
+    // reset game
+      case "KeyR" :
+        resetBtn.classList.add("active");
+        resetBtn.onclick();
+        setTimeout(() => {
+          resetBtn.classList.remove("active");
+        }, 100);
+        break;
+    }
+  },
+  true
+);
+
+    function clickEvent(){
+        // nếu game pause thì key event onlick như sau
+        if(gamePause){
+                    leftBtn.onclick = function() {
+                        runGame();
+                    };
+                    rightBtn.onclick = function() {
+                        runGame();               
+                    };
+                    dropBtn.onclick = function(){
+                        runGame();
+                    };
+                    rotateBtn.onclick = function(){
+                        runGame();
+                    };
+                    bottomBtn.onclick = function() {
+                        runGame();
+                    };
+                    pauseBtn.onclick = function(){
+                        runGame();
+                    };
+                    resetBtn.onclick = function() {
+                        gameReset = true;
+                        runGame();
+                        prepare();
+                        gameReset = false;
+                    };
+                    return;
+            }
+        // nếu game over thì key event onlick như sau
+        if(gameOver){
+                    //  giảm level xuống mức tối thiểu là 1 nếu giảm típ quay về level 4
+                    leftBtn.onclick = function() {
+                        moveAudio();
+                        if(level > 1){
+                            levelDown();
+                            return;
+                        }
+                        level = 4;
+                    };
+                    // tăng level xuống mức tối thiểu là 1 nếu tăng típ quay về level 1
+                    rightBtn.onclick = function() {
+                        moveAudio();
+                        if(level < 4){
+                            levelUp();
+                            return;
+                        }
+                        level = 1; 
+                       
+                    };
+                    dropBtn.onclick = function(){
+                        resetGame();
+                        runGame();
+                    }
+                    rotateBtn.onclick = function(){
+                        resetGame();
+                        runGame();
+                    };
+                    bottomBtn.onclick = function() {
+                        resetGame();
+                        runGame();
+                    };
+                    resetBtn.onclick = function() {
+                        resetGame();
+                        runGame();
+                    };
+                    return;
+            }
+        if(!gameStart){
+                    leftBtn.onclick = function() {
+                        moveAudio();
+                        if(level > 1){
+                            levelDown();
+                            return;
+                        }
+                        level = 4;
+                      
+                    };
+                    rightBtn.onclick = function() {
+                        moveAudio();
+                        if(level < 4){
+                            levelUp();
+                            return;
+                        }
+                        level = 1; 
+                    };
+                    dropBtn.onclick = function(){
+                        startGame();
+                        runGame();
+                    }
+                    rotateBtn.onclick = function(){
+                        startGame();
+                        runGame();
+                    };
+                    bottomBtn.onclick = function() {
+                        startGame();
+                        runGame();
+                    };
+                    resetBtn.onclick = function() {
+                        gameReset = true;
+                        prepare();
+                        gameReset = false;
+                    };
+            } else {
+                    bottomBtn.onclick = function() {
+                        currentShape.moveBottom();
+                        moveAudio();
+                    };
+                    leftBtn.onclick = function() {
+                        currentShape.moveLeft();
+                        moveAudio();
+                    };
+                    rightBtn.onclick = function() {
+                        currentShape.moveRight();
+                        moveAudio();
+                    };
+                    dropBtn.onclick = function() {
+                        currentShape.dropDown();
+                        dropAudio();
+                    };
+                    rotateBtn.onclick = function(){
+                        currentShape.changeRotation();
+                        rotateAudio();
+                    };
+                    pauseBtn.onclick = function(){
+                        pauseGame();
+                    };
+                    resetBtn.onclick = function() {
+                        gameReset = true;
+                        prepare();
+                        gameReset = false;
+                    };
+                }
+        }
+
+
+        function playAudio(currentTime,duration){ 
+            let music = new Audio(urlAudio);
+            music.volume = 1;
+            music.currentTime  = currentTime; // tính bằng giây
+            music.play(); 
+            setTimeout(() => {
+                music.pause(); 
+            }, duration);  // tính bằng  miliseconds                       
+        }
+
+        function completeRowsAudio(){
+                    // * 1000 để đổi từ giây sang mili giây      
+                    playAudio( 0, 0.7675 * 1000);
+        }
+
+        function moveAudio() {
+                    playAudio(2.9088,0.1437 * 1000);
+        }
+
+        function dropAudio() {
+                    playAudio(1.2558, 0.3546 * 1000);           
+        }
+
+        function rotateAudio() {
+                    playAudio(2.2471, 0.0807 * 1000);
+        }
+
+        function gameOverAudio(){
+                    playAudio( 8.4276, 1.0437 * 1000);
+        }
+
+    prepare();
+    clickEvent();
+    setInterval(clickEvent,1000/fps);
+    setInterval(draw,1000/fps);
+    
+</script>
+</body>
+</html>
